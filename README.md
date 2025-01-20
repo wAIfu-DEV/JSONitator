@@ -10,11 +10,11 @@
 
 void main()
 {
-    const char* json_str = "{\"field\":\"value\"}";
+    const char *json_str = "{\"field\":\"value\"}";
 
-    JSON* j = json_parse(json_str);
-    JSON* entry = json_object_get(j,"field");
-    char* value = json_value_string(entry);
+    JSON *j = json_parse(json_str);
+    JSON *entry = json_object_get(j,"field");
+    char *value = json_value_string(entry);
 
     printf("Json: %s\n", json_stringify(j));
     printf("Value: %s\n", value);
