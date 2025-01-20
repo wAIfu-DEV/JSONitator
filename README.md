@@ -1,5 +1,5 @@
 # JSONitator
-## Lightweight JSON Parser
+## Lightweight JSON Parser Library
 
 ### What can it do?
 1. Parse json files/strings of any sizes
@@ -25,7 +25,7 @@ void main()
 
 ### TODO
 - [x] Water the plants
-- [ ] Linux support
+- [ ] Linux support (_i64toa_s, _snprintf_s are windows-only)
 - [ ] Functions for creating JSON structs without parsing
 - [ ] Check for hidden memory leaks
 - [ ] More testing with malformed JSON strings
