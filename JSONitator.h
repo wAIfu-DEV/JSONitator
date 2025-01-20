@@ -1079,6 +1079,9 @@ JSON *json_parse(const char *s)
  */
 JSON *json_object_get(JSON *self, const char *field)
 {
+    if (JSON_PARSER_DEBUG)
+        __print("json_object_get");
+
     if (self->type != VAL_OBJECT)
     {
         __print("Cannot use json_object_get on object that is not of type VAL_OBJECT.");
@@ -1107,6 +1110,9 @@ JSON *json_object_get(JSON *self, const char *field)
  */
 JSON *json_array_get(JSON *self, uint64_t index)
 {
+    if (JSON_PARSER_DEBUG)
+        __print("json_array_get");
+
     if (self->type != VAL_ARRAY)
     {
         __print("Cannot use json_array_get on object that is not of type VAL_ARRAY.");
@@ -1126,6 +1132,9 @@ JSON *json_array_get(JSON *self, uint64_t index)
 
 JSON *json_get_deep(JSON *self, uint64_t fields_amount, const char *fields[fields_amount])
 {
+    if (JSON_PARSER_DEBUG)
+        __print("json_get_deep");
+
     if (fields_amount == 0)
     {
         __print("json_get_deep called with 0 fields to access.");
