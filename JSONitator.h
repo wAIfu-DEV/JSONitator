@@ -20,6 +20,7 @@
 #include "ctype.h"
 #include "string.h"
 #include "math.h"
+#include "stdarg.h"
 
 typedef uint8_t VALUE_TYPE;
 
@@ -107,7 +108,7 @@ void __print(const char *s)
     if (JSON_PARSER_SILENT)
         return;
 
-    __printf("JSONparser: %s\n", s);
+    printf("JSONparser: %s\n", s);
 }
 
 void __printf(const char *format, ...)
@@ -479,7 +480,9 @@ errno_t __parse_number(JSON *self, const char *s, uint64_t *i)
     if (JSON_PARSER_DEBUG)
         __print("__parse_number");
 
-    if (s[0] == '\0')
+    errno_t ret = 0;
+
+    if (s[*i] == '\0')
     {
         __print("Failed to parse object: found EOF during parsing in __parse_number");
         return 1;
@@ -505,9 +508,8 @@ errno_t __parse_number(JSON *self, const char *s, uint64_t *i)
     if (num_ptr == NULL)
     {
         __print("Failed to allocate memory for digits buffer in __parse_number.");
-        free(digits_buff);
-        digits_buff = NULL;
-        return 1;
+        ret = 1;
+        goto clean_digits;
     }
 
     errno = 0;
@@ -515,18 +517,23 @@ errno_t __parse_number(JSON *self, const char *s, uint64_t *i)
     if (errno != 0)
     {
         __print("Failed to parse number using strtold.");
-        free(digits_buff);
-        digits_buff = NULL;
-        return 1;
+
+        free(num_ptr);
+        num_ptr = NULL;
+
+        ret = 1;
+        goto clean_digits;
     }
 
     self->type = VAL_NUMBER;
     self->value = num_ptr;
 
     (*i) += len;
+
+clean_digits:
     free(digits_buff);
     digits_buff = NULL;
-    return 0;
+    return ret;
 }
 
 errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
@@ -534,7 +541,7 @@ errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
     if (JSON_PARSER_DEBUG)
         __print("__parse_any_value");
 
-    if (s[0] == '\0')
+    if (s[*i] == '\0')
     {
         __print("Failed to parse object: found EOF during parsing in __parse_any_value");
         return 1;
@@ -690,7 +697,7 @@ errno_t __parse_object(JSON *self, const char *s, uint64_t *i)
 
     ++(*i);
 
-    if (s[0] == '\0')
+    if (s[*i] == '\0')
     {
         __print("Failed to parse object: found EOF during parsing in __parse_object");
         return 1;
@@ -847,6 +854,7 @@ errno_t __append_array_element(JSON_ARRAY *array, JSON *value)
         __print("__append_array_element");
 
     array->elements = realloc(array->elements, sizeof(JSON *) * (array->length + 1));
+
     if (array->elements == NULL)
     {
         __print("Failed to reallocate elements in array.");
@@ -865,7 +873,7 @@ errno_t __parse_array(JSON *self, const char *s, uint64_t *i)
 
     (*i)++;
 
-    if (s[0] == '\0')
+    if (s[*i] == '\0')
     {
         __print("Failed to parse array: found EOF during parsing in __parse_array");
         return 1;
