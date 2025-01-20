@@ -1,0 +1,1 @@
+zig cc -g main.c -o out.exe -Ofast
