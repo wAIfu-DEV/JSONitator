@@ -25,6 +25,7 @@ void main()
 
 ### TODO
 - [x] Water the plants
+- [ ] Linux support
 - [ ] Functions for creating JSON structs without parsing
 - [ ] Check for hidden memory leaks
 - [ ] More testing with malformed JSON strings
