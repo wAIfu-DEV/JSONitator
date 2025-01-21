@@ -1866,19 +1866,19 @@ JSON *json_make_string(const char *s)
  * @param d
  * @return NULL | JSON* (memory is owned, use json_free to release if standalone)
  */
-JSON *json_make_number(double d)
+JSON *json_make_number(double num)
 {
-    if (d == NAN)
+    if (num == NAN)
     {
         return NULL;
     }
     JSON *j = malloc(sizeof(JSON));
 
-    double *dpt = malloc(sizeof(double));
-    (*dpt) = d;
+    double *num_ptr = malloc(sizeof(double));
+    (*num_ptr) = num;
 
     j->type = VAL_NUMBER;
-    j->value = dpt;
+    j->value = num_ptr;
     return j;
 }
 
@@ -1892,11 +1892,11 @@ JSON *json_make_bool(int b)
 {
     JSON *j = malloc(sizeof(JSON));
 
-    double *bpt = malloc(sizeof(int));
-    (*bpt) = b ? 1 : 0;
+    double *bool_pt = malloc(sizeof(int));
+    (*bool_pt) = b ? 1 : 0;
 
     j->type = VAL_BOOL;
-    j->value = bpt;
+    j->value = bool_pt;
     return j;
 }
 
@@ -1924,9 +1924,9 @@ JSON *json_make_null()
  */
 JSON *json_make_object(uint64_t len, char *fields[len], JSON *values[len])
 {
-    JSON_OBJECT *o = malloc(sizeof(JSON_OBJECT));
+    JSON_OBJECT *obj = malloc(sizeof(JSON_OBJECT));
 
-    err_t err = __init_object(o);
+    err_t err = __init_object(obj);
 
     if (err)
     {
@@ -1935,15 +1935,7 @@ JSON *json_make_object(uint64_t len, char *fields[len], JSON *values[len])
 
     for (uint64_t i = 0; i < len; ++i)
     {
-        char *buff = NULL;
-        err_t err = __str_copy_alloc(fields[i], &buff);
-
-        if (err)
-        {
-            return NULL;
-        }
-
-        err = __append_object_entry(o, buff, values[i]);
+        err_t err = __append_object_entry(obj, fields[i], values[i]);
 
         if (err)
         {
@@ -1953,7 +1945,7 @@ JSON *json_make_object(uint64_t len, char *fields[len], JSON *values[len])
 
     JSON *j = malloc(sizeof(JSON));
     j->type = VAL_OBJECT;
-    j->value = o;
+    j->value = obj;
     return j;
 }
 
@@ -1967,9 +1959,9 @@ JSON *json_make_object(uint64_t len, char *fields[len], JSON *values[len])
  */
 JSON *json_make_array(uint64_t len, JSON *values[len])
 {
-    JSON_ARRAY *a = malloc(sizeof(JSON_ARRAY));
+    JSON_ARRAY *arr = malloc(sizeof(JSON_ARRAY));
 
-    err_t err = __init_array(a);
+    err_t err = __init_array(arr);
 
     if (err)
     {
@@ -1978,7 +1970,7 @@ JSON *json_make_array(uint64_t len, JSON *values[len])
 
     for (uint64_t i = 0; i < len; ++i)
     {
-        err_t err = __append_array_element(a, values[i]);
+        err_t err = __append_array_element(arr, values[i]);
 
         if (err)
         {
@@ -1988,25 +1980,25 @@ JSON *json_make_array(uint64_t len, JSON *values[len])
 
     JSON *j = malloc(sizeof(JSON));
     j->type = VAL_ARRAY;
-    j->value = a;
+    j->value = arr;
     return j;
 }
 
-err_t json_object_append(JSON *j, const char *field, JSON *value)
+err_t json_object_append(JSON *json, const char *field, JSON *value)
 {
-    if (j == NULL || field == NULL || value == NULL)
+    if (json == NULL || field == NULL || value == NULL)
     {
         __print("json_object_append failed NULL argument.");
         return 1;
     }
 
-    if (j->type == VAL_OBJECT)
+    if (json->type == VAL_OBJECT)
     {
         __print("json_object_append first argument is not of type VAL_OBJECT");
         return 1;
     }
 
-    err_t err = __append_object_entry(j->value, field, value);
+    err_t err = __append_object_entry(json->value, field, value);
 
     if (err)
     {
@@ -2016,95 +2008,95 @@ err_t json_object_append(JSON *j, const char *field, JSON *value)
     return 0;
 }
 
-err_t json_object_delete(JSON *j, const char *field)
+err_t json_object_delete(JSON *json, const char *field)
 {
-    if (j == NULL || field == NULL)
+    if (json == NULL || field == NULL)
     {
         __print("json_object_delete failed NULL argument.");
         return 1;
     }
 
-    if (j->type == VAL_OBJECT)
+    if (json->type == VAL_OBJECT)
     {
         __print("json_object_delete first argument is not of type VAL_OBJECT");
         return 1;
     }
 
-    JSON_OBJECT *o = j->value;
+    JSON_OBJECT *obj = json->value;
 
-    if (o->length == 0)
+    if (obj->length == 0)
     {
         __print("json_object_delete object is of length 0");
         return 1;
     }
 
-    JSON_OBJECT *newo = malloc(sizeof(JSON_OBJECT));
+    JSON_OBJECT *new_obj = malloc(sizeof(JSON_OBJECT));
 
-    uint64_t newlength = o->length - 1;
+    uint64_t new_length = obj->length - 1;
 
-    if (newlength == 0)
+    if (new_length == 0)
     {
-        newo->fields = NULL;
-        newo->values = NULL;
-        newo->length = 0;
+        new_obj->fields = NULL;
+        new_obj->values = NULL;
+        new_obj->length = 0;
     }
     else
     {
-        newo->fields = malloc(sizeof(char *) * newlength);
+        new_obj->fields = malloc(sizeof(char *) * new_length);
 
-        if (newo->fields == NULL)
+        if (new_obj->fields == NULL)
         {
             __print("Failed to alloc fields in object.");
             return 1;
         }
 
-        newo->values = malloc(sizeof(JSON *) * newlength);
+        new_obj->values = malloc(sizeof(JSON *) * new_length);
 
-        if (newo->values == NULL)
+        if (new_obj->values == NULL)
         {
             __print("Failed to alloc values in object.");
             return 1;
         }
-        newo->length = newlength;
+        new_obj->length = new_length;
     }
 
     uint64_t k = 0;
-    for (uint64_t i = 0; i < o->length; ++i)
+    for (uint64_t i = 0; i < obj->length; ++i)
     {
-        if (__str_comp(field, o->fields[i]))
+        if (__str_comp(field, obj->fields[i]))
         {
             continue;
         }
-        newo->fields[k] = o->fields[i];
-        newo->values[k] = o->values[i];
+        new_obj->fields[k] = obj->fields[i];
+        new_obj->values[k] = obj->values[i];
         ++k;
     }
 
-    free(o->fields);
-    o->fields = NULL;
-    free(o->values);
-    o->values = NULL;
-    free(o);
+    free(obj->fields);
+    obj->fields = NULL;
+    free(obj->values);
+    obj->values = NULL;
+    free(obj);
 
-    j->value = newo;
+    json->value = new_obj;
     return 0;
 }
 
-err_t json_array_append(JSON *a, JSON *value)
+err_t json_array_append(JSON *json, JSON *value)
 {
-    if (a == NULL || value == NULL)
+    if (json == NULL || value == NULL)
     {
         __print("json_array_append failed NULL argument.");
         return 1;
     }
 
-    if (a->type == VAL_ARRAY)
+    if (json->type == VAL_ARRAY)
     {
         __print("json_array_append first argument is not of type VAL_OBJECT");
         return 1;
     }
 
-    err_t err = __append_array_element(a->value, value);
+    err_t err = __append_array_element(json->value, value);
 
     if (err)
     {
@@ -2114,64 +2106,64 @@ err_t json_array_append(JSON *a, JSON *value)
     return 0;
 }
 
-err_t json_array_delete(JSON *j, uint64_t index)
+err_t json_array_delete(JSON *json, uint64_t index)
 {
-    if (j == NULL)
+    if (json == NULL)
     {
         __print("json_array_delete failed NULL argument.");
         return 1;
     }
 
-    if (j->type == VAL_ARRAY)
+    if (json->type == VAL_ARRAY)
     {
         __print("json_array_delete first argument is not of type VAL_ARRAY");
         return 1;
     }
 
-    JSON_ARRAY *a = j->value;
+    JSON_ARRAY *arr = json->value;
 
-    if (a->length == 0)
+    if (arr->length == 0)
     {
         __print("json_array_delete array is of length 0");
         return 1;
     }
 
-    JSON_ARRAY *newa = malloc(sizeof(JSON_ARRAY));
+    JSON_ARRAY *new_arr = malloc(sizeof(JSON_ARRAY));
 
-    uint64_t newlength = a->length - 1;
+    uint64_t new_length = arr->length - 1;
 
-    if (newlength == 0)
+    if (new_length == 0)
     {
-        newa->elements = NULL;
-        newa->length = 0;
+        new_arr->elements = NULL;
+        new_arr->length = 0;
     }
     else
     {
-        newa->elements = malloc(sizeof(JSON *) * newlength);
+        new_arr->elements = malloc(sizeof(JSON *) * new_length);
 
-        if (newa->elements == NULL)
+        if (new_arr->elements == NULL)
         {
             __print("Failed to alloc values in array.");
             return 1;
         }
-        newa->length = newlength;
+        new_arr->length = new_length;
     }
 
     uint64_t k = 0;
-    for (uint64_t i = 0; i < a->length; ++i)
+    for (uint64_t i = 0; i < arr->length; ++i)
     {
         if (i == index)
         {
             continue;
         }
-        newa->elements[k] = a->elements[i];
+        new_arr->elements[k] = arr->elements[i];
         ++k;
     }
 
-    free(a->elements);
-    a->elements = NULL;
-    free(a);
+    free(arr->elements);
+    arr->elements = NULL;
+    free(arr);
 
-    j->value = newa;
+    json->value = new_arr;
     return 0;
 }
