@@ -133,8 +133,51 @@ int main(void)
     printf("json[\"llm\"][\"temperature\"] == ");
     json_print(nested_obj);
 
+    //==========================================================================
+    // Create JSON objects
+    //==========================================================================
+
+    // Creates an object like:
+    /*
+        {
+            "field1": "This is a JSON string.",
+            "field2": 53
+        }
+    */
+    char *fields[2] = {"field1", "field2"};
+    JSON *values[2] = {
+        json_make_string("This is a JSON string."),
+        json_make_number(53),
+    };
+    JSON *json_object = json_make_object(2, fields, values);
+
+    // Add an entry "field3": null
+    err_t err = json_object_append(json_object, "field3", json_make_null());
+
+    if (err != 0)
+    {
+        printf("Failed to append entry to json_object\n");
+        return 1;
+    }
+
+    // Delete this new entry
+    err = json_object_delete(json_object, "field3");
+
+    if (err != 0)
+    {
+        printf("Failed to delete entry in json_object\n");
+        return 1;
+    }
+
+    //==========================================================================
+    // Free JSON objects
+    //==========================================================================
+
     // Clear the memory allocated during parsing
-    // Only call on the direct output of json_parse
+    // Only call on the direct output of json_parse or standalone JSON structs
     json_free(json);
+
+    // In this case json_object is standalone, all child values will be freed by json_free
+    json_free(json_object);
     return 0;
 }

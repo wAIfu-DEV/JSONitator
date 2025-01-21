@@ -25,7 +25,7 @@ void main()
 
 ### TODO
 - [x] Water the plants
-- [ ] Linux support (_i64toa_s, _snprintf_s are windows-only)
-- [ ] Functions for creating JSON structs without parsing
+- [x] Remove windows-only functions
+- [x] Functions for creating JSON structs without parsing
 - [ ] Check for hidden memory leaks
 - [ ] More testing with malformed JSON strings
