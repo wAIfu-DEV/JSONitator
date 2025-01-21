@@ -17,7 +17,6 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "stdint.h"
-#include "ctype.h"
 #include "string.h"
 #include "math.h"
 #include "stdarg.h"
@@ -34,8 +33,8 @@ const VALUE_TYPE VAL_NULL = 5;
 const char *__VAL_TO_STR[] = {
     [VAL_OBJECT] = "object",
     [VAL_ARRAY] = "array",
-    [VAL_NUMBER] = "number",
     [VAL_STRING] = "string",
+    [VAL_NUMBER] = "number",
     [VAL_BOOL] = "bool",
     [VAL_NULL] = "null",
 };
@@ -128,6 +127,14 @@ int __is_whitespace(char c)
         __print("__is_whitespace");
 
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
+
+int __is_digit(char c)
+{
+    if (JSON_PARSER_DEBUG)
+        __print("__is_digit");
+
+    return c >= 48 && c <= 57;
 }
 
 errno_t __init_object(JSON_OBJECT *self)
@@ -233,7 +240,7 @@ uint64_t __number_len(const char *s)
         return 0;
     }
 
-    while (s[i] != '\0' && (isdigit(s[i]) || s[i] == '.' || s[i] == '-'))
+    while (s[i] != '\0' && (__is_digit(s[i]) || s[i] == '.' || s[i] == '-'))
     {
         if (i == __MAX_ITER)
         {
@@ -670,7 +677,7 @@ errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
             return 0;
         }
 
-        if (isdigit(s[*i]) || s[*i] == '.' || s[*i] == '-')
+        if (__is_digit(s[*i]) || s[*i] == '.' || s[*i] == '-')
         {
             self->type = VAL_NUMBER;
 
