@@ -1,0 +1,1 @@
+gcc -g example.c -o out.exe -Ofast -std=c17

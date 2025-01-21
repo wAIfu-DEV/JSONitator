@@ -1,1 +1,1 @@
-zig cc -g main.c -o out.exe -Ofast
+zig cc -g example.c -o out.exe -Ofast -std=c17

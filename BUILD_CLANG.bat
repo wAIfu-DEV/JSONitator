@@ -1,1 +1,1 @@
-clang -g main.c -o out.exe -Ofast
+clang -g example.c -o out.exe -Ofast -std=c17

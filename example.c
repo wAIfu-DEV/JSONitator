@@ -11,20 +11,17 @@
 
 char *file_read(const char *file_path)
 {
-    FILE *f;
-    errno_t err = fopen_s(&f, file_path, "rb");
+    FILE *f = fopen(file_path, "rb");
 
-    if (err)
-    {
+    if (f == NULL)
         return NULL;
-    }
 
     fseek(f, 0, SEEK_END);
     uint64_t fsize = ftell(f);
     rewind(f);
 
     char *file_buff = malloc(sizeof(char) * fsize);
-    uint64_t read_size = fread_s(file_buff, fsize, sizeof(char), fsize, f);
+    uint64_t read_size = fread(file_buff, sizeof(char), fsize, f);
 
     if (fsize != read_size)
     {
@@ -74,9 +71,9 @@ int main(void)
         return 1;
     }
 
-    FILE *fstream;
+    FILE *fstream = fopen("out.json", "w");
 
-    if (fopen_s(&fstream, "out.json", "w"))
+    if (fstream == NULL)
     {
         printf("Failed to open out.json file.\n");
         return 1;

@@ -20,15 +20,16 @@
 #include "string.h"
 #include "math.h"
 #include "stdarg.h"
+#include "errno.h"
 
 typedef uint8_t VALUE_TYPE;
 
-const VALUE_TYPE VAL_OBJECT = 0;
-const VALUE_TYPE VAL_ARRAY = 1;
-const VALUE_TYPE VAL_NUMBER = 2;
-const VALUE_TYPE VAL_STRING = 3;
-const VALUE_TYPE VAL_BOOL = 4;
-const VALUE_TYPE VAL_NULL = 5;
+#define VAL_OBJECT 0
+#define VAL_ARRAY 1
+#define VAL_NUMBER 2
+#define VAL_STRING 3
+#define VAL_BOOL 4
+#define VAL_NULL 5
 
 const char *__VAL_TO_STR[] = {
     [VAL_OBJECT] = "object",
@@ -98,9 +99,11 @@ typedef struct builder
     uint64_t len;
 } __BUILDER;
 
-errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i);
-errno_t __parse_object(JSON *self, const char *s, uint64_t *i);
-errno_t __parse_array(JSON *self, const char *s, uint64_t *i);
+typedef int __err_t;
+
+__err_t __parse_any_value(JSON *self, const char *s, uint64_t *i);
+__err_t __parse_object(JSON *self, const char *s, uint64_t *i);
+__err_t __parse_array(JSON *self, const char *s, uint64_t *i);
 
 void __print(const char *s)
 {
@@ -137,7 +140,7 @@ int __is_digit(char c)
     return c >= 48 && c <= 57;
 }
 
-errno_t __init_object(JSON_OBJECT *self)
+__err_t __init_object(JSON_OBJECT *self)
 {
     if (JSON_PARSER_DEBUG)
         __print("__init_object");
@@ -252,7 +255,7 @@ uint64_t __number_len(const char *s)
     return i;
 }
 
-errno_t __str_copy_alloc(const char *s, char **buff)
+__err_t __str_copy_alloc(const char *s, char **buff)
 {
     if (JSON_PARSER_DEBUG)
         __print("__str_copy_alloc");
@@ -306,7 +309,7 @@ errno_t __str_copy_alloc(const char *s, char **buff)
     return 0;
 }
 
-errno_t __append_object_entry(JSON_OBJECT *self, const char *field, JSON *value)
+__err_t __append_object_entry(JSON_OBJECT *self, const char *field, JSON *value)
 {
     if (JSON_PARSER_DEBUG)
         __print("__append_object_entry");
@@ -327,7 +330,7 @@ errno_t __append_object_entry(JSON_OBJECT *self, const char *field, JSON *value)
         return 1;
     }
 
-    errno_t res = __str_copy_alloc(field, &self->fields[self->length]);
+    __err_t res = __str_copy_alloc(field, &self->fields[self->length]);
 
     if (res != 0)
     {
@@ -449,7 +452,7 @@ char *__parse_string(const char *s, uint64_t *i)
     return parsed;
 }
 
-errno_t __consume_colon(const char *s, uint64_t *i)
+__err_t __consume_colon(const char *s, uint64_t *i)
 {
     if (JSON_PARSER_DEBUG)
         __print("__consume_colon");
@@ -482,12 +485,12 @@ errno_t __consume_colon(const char *s, uint64_t *i)
     return 1;
 }
 
-errno_t __parse_number(JSON *self, const char *s, uint64_t *i)
+__err_t __parse_number(JSON *self, const char *s, uint64_t *i)
 {
     if (JSON_PARSER_DEBUG)
         __print("__parse_number");
 
-    errno_t ret = 0;
+    __err_t ret = 0;
 
     if (s[*i] == '\0')
     {
@@ -543,7 +546,7 @@ clean_digits:
     return ret;
 }
 
-errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
+__err_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
 {
     if (JSON_PARSER_DEBUG)
         __print("__parse_any_value");
@@ -639,7 +642,7 @@ errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
         if (s[*i] == '{')
         {
             self->type = VAL_OBJECT;
-            errno_t err = __parse_object(self, s, i);
+            __err_t err = __parse_object(self, s, i);
 
             if (err != 0)
             {
@@ -652,7 +655,7 @@ errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
         if (s[*i] == '[')
         {
             self->type = VAL_ARRAY;
-            errno_t err = __parse_array(self, s, i);
+            __err_t err = __parse_array(self, s, i);
 
             if (err != 0)
             {
@@ -681,7 +684,7 @@ errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
         {
             self->type = VAL_NUMBER;
 
-            errno_t err = __parse_number(self, s, i);
+            __err_t err = __parse_number(self, s, i);
             if (err != 0)
             {
                 __print("Failed to parse number in __parse_any_value");
@@ -697,7 +700,7 @@ errno_t __parse_any_value(JSON *self, const char *s, uint64_t *i)
     return 0;
 }
 
-errno_t __parse_object(JSON *self, const char *s, uint64_t *i)
+__err_t __parse_object(JSON *self, const char *s, uint64_t *i)
 {
     if (JSON_PARSER_DEBUG)
         __print("__parse_object");
@@ -711,7 +714,7 @@ errno_t __parse_object(JSON *self, const char *s, uint64_t *i)
     }
 
     JSON_OBJECT *obj = malloc(sizeof(JSON_OBJECT));
-    errno_t res = __init_object(obj);
+    __err_t res = __init_object(obj);
 
     if (res != 0)
     {
@@ -769,7 +772,7 @@ errno_t __parse_object(JSON *self, const char *s, uint64_t *i)
                 goto clean_field;
             }
 
-            errno_t err = __parse_any_value(value, s, i);
+            __err_t err = __parse_any_value(value, s, i);
 
             if (err != 0)
             {
@@ -839,7 +842,7 @@ errno_t __parse_object(JSON *self, const char *s, uint64_t *i)
     return 1;
 };
 
-errno_t __init_array(JSON_ARRAY *self)
+__err_t __init_array(JSON_ARRAY *self)
 {
     if (JSON_PARSER_DEBUG)
         __print("__init_array");
@@ -855,7 +858,7 @@ errno_t __init_array(JSON_ARRAY *self)
     return 0;
 }
 
-errno_t __append_array_element(JSON_ARRAY *array, JSON *value)
+__err_t __append_array_element(JSON_ARRAY *array, JSON *value)
 {
     if (JSON_PARSER_DEBUG)
         __print("__append_array_element");
@@ -873,7 +876,7 @@ errno_t __append_array_element(JSON_ARRAY *array, JSON *value)
     return 0;
 }
 
-errno_t __parse_array(JSON *self, const char *s, uint64_t *i)
+__err_t __parse_array(JSON *self, const char *s, uint64_t *i)
 {
     if (JSON_PARSER_DEBUG)
         __print("__parse_array");
@@ -894,7 +897,7 @@ errno_t __parse_array(JSON *self, const char *s, uint64_t *i)
         return 1;
     }
 
-    errno_t err = __init_array(array);
+    __err_t err = __init_array(array);
     if (err != 0)
     {
         free(array);
@@ -933,7 +936,7 @@ errno_t __parse_array(JSON *self, const char *s, uint64_t *i)
             goto clean_arr_elems;
         }
 
-        errno_t err = __parse_any_value(value, s, i);
+        __err_t err = __parse_any_value(value, s, i);
         if (err != 0)
         {
             __print("Failed to parse value in array.");
@@ -1027,7 +1030,7 @@ JSON *json_parse(const char *s)
 
             obj->type = VAL_OBJECT;
 
-            errno_t err = __parse_object(obj, s, &i);
+            __err_t err = __parse_object(obj, s, &i);
 
             if (err != 0)
             {
@@ -1054,7 +1057,7 @@ JSON *json_parse(const char *s)
             }
 
             arr->type = VAL_ARRAY;
-            errno_t err = __parse_array(arr, s, &i);
+            __err_t err = __parse_array(arr, s, &i);
 
             if (err != 0)
             {
@@ -1502,18 +1505,26 @@ char *json_stringify(JSON *json)
 
         if (diff < 0.00001)
         {
-            errno_t err = _i64toa_s((int64_t)num_val, buff, 512, 10);
-            if (err != 0)
+            uint64_t size = snprintf(buff, 512, "%lld", (int64_t)num_val);
+            buff[511] = '\0';
+
+            if (size > 512)
             {
-                __print("Failed to stringify number.");
+                __print("Buffer overflow when trying to stringify integer number.");
                 return NULL;
             }
-
             __builder_append(&builder, buff);
         }
         else
         {
-            _snprintf_s(buff, 512, 512, "%.12g", (double)num_val);
+            uint64_t size = snprintf(buff, 512, "%.12g", (double)num_val);
+            buff[511] = '\0';
+
+            if (size > 512)
+            {
+                __print("Buffer overflow when trying to stringify decimal number.");
+                return NULL;
+            }
 
             char *decimal_point = strchr(buff, '.');
             if (decimal_point != NULL)
