@@ -4,6 +4,7 @@
 ### What can it do?
 1. Parse json files/strings of any sizes
 2. Stringify JSON
+3. Easily create JSON programmatically
 
 ```c
 #include "JSONitator.h"
