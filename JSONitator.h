@@ -24,14 +24,14 @@
 
 typedef uint8_t VALUE_TYPE;
 
-#define VAL_OBJECT 0
-#define VAL_ARRAY 1
-#define VAL_NUMBER 2
-#define VAL_STRING 3
-#define VAL_BOOL 4
-#define VAL_NULL 5
+#define VAL_OBJECT (VALUE_TYPE)0
+#define VAL_ARRAY (VALUE_TYPE)1
+#define VAL_NUMBER (VALUE_TYPE)2
+#define VAL_STRING (VALUE_TYPE)3
+#define VAL_BOOL (VALUE_TYPE)4
+#define VAL_NULL (VALUE_TYPE)5
 
-const char *__VAL_TO_STR[] = {
+const char *__VAL_TO_STR[6] = {
     [VAL_OBJECT] = "object",
     [VAL_ARRAY] = "array",
     [VAL_STRING] = "string",
